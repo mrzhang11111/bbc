@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { getAnime } from '@animeflix/api/gogoanime';
+import { getAnime } from '@animeflix/api';
 
 export default async function handler(
   req: NextApiRequest,

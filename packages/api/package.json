@@ -11,9 +11,7 @@
   "files": [
     "dist",
     "aniList.d.ts",
-    "kitsu.d.ts",
-    "gogoanime.js",
-    "gogoanime.d.ts"
+    "kitsu.d.ts"
   ],
   "scripts": {
     "lint": "eslint src",
@@ -22,7 +20,6 @@
     "build": "run-s build:*"
   },
   "dependencies": {
-    "gogoanime-api": "github:riimuru/gogoanime",
     "graphql": "^16.5.0",
     "graphql-request": "^4.3.0",
     "graphql-tag": "^2.12.6"

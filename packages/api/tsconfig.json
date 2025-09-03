@@ -1,8 +1,17 @@
 {
-  "extends": "@animeflix/tsconfig/base.json",
   "compilerOptions": {
+    "target": "ES2018",
+    "lib": ["ES2018", "DOM"],
+    "module": "commonjs",
     "outDir": "dist",
-    "isolatedModules": false
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["src"],
   "exclude": ["dist", "node_modules"]

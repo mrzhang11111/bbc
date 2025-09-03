@@ -50,6 +50,9 @@ export const { getAnimesKitsu, getEpisodeKitsu } = kitsuSdk(
   kitsuMiddleware
 );
 
+// Export gogoanime functions
+export { getAnime, getAnimeSlug } from './gogoanime';
+
 /**
  * @example 'naruto', startDate: '2019', season: 'WINTER'
  */
@@ -72,7 +75,7 @@ export const getKitsuEpisodes = async (
     first: 8,
   });
 
-  let kitsuAnime = kitsuAnimes.searchAnimeByTitle.animes.filter((r) => {
+  let kitsuAnime = kitsuAnimes?.searchAnimeByTitle?.animes?.filter((r) => {
     // return if the anime doesn't exists
     if (!r) return false;
 
@@ -84,9 +87,9 @@ export const getKitsuEpisodes = async (
     if (r.season !== season && season) return false;
 
     return r.startDate.trim().split('-')[0] === startDate.toString();
-  })[0];
+  })?.[0];
 
-  if (kitsuAnime === undefined) {
+  if (!kitsuAnime) {
     kitsuAnime = {
       id: '-1',
       episodeCount: 0,
@@ -96,7 +99,7 @@ export const getKitsuEpisodes = async (
     };
   }
 
-  if (kitsuAnime.episodeCount === null) {
+  if (kitsuAnime.episodeCount === null && kitsuAnime.episodes?.nodes) {
     kitsuAnime.episodeCount = kitsuAnime.episodes.nodes.length;
   }
 

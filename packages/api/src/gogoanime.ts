@@ -1,11 +1,87 @@
-import {
-  scrapeMP4,
-  scrapeSearch,
-  scrapeAnimeDetails,
-} from 'gogoanime-api/lib/anime_parser';
-import { AnimeList, GogoEpisode } from 'gogoanime-api/lib/types';
-
 import { getAnimeTitle } from './api';
+
+// Consumet API base URL
+const CONSUMET_API_BASE = 'https://api-consumet-org-psi-nine.vercel.app';
+
+// Types for Consumet API responses
+interface ConsumetSearchResult {
+  id: string;
+  title: string;
+  url: string;
+  image: string;
+  releaseDate: string;
+  subOrDub: string;
+}
+
+interface ConsumetAnimeInfo {
+  id: string;
+  title: string;
+  url: string;
+  genres: string[];
+  totalEpisodes: number;
+  image: string;
+  releaseDate: string;
+  description: string;
+  subOrDub: string;
+  type: string;
+  status: string;
+  otherName: string;
+  episodes: ConsumetEpisode[];
+}
+
+interface ConsumetEpisode {
+  id: string;
+  number: number;
+  url: string;
+}
+
+interface ConsumetStreamingData {
+  headers: {
+    Referer: string;
+    'User-Agent'?: string;
+  };
+  sources: {
+    url: string;
+    quality: string;
+    isM3U8: boolean;
+  }[];
+}
+
+// Helper function to search anime using Consumet API
+async function searchAnime(query: string): Promise<ConsumetSearchResult[]> {
+  try {
+    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/${encodeURIComponent(query)}`);
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error('Error searching anime:', error);
+    return [];
+  }
+}
+
+// Helper function to get anime info using Consumet API
+async function getAnimeInfo(id: string): Promise<ConsumetAnimeInfo | null> {
+  try {
+    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/info/${id}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting anime info:', error);
+    return null;
+  }
+}
+
+// Helper function to get streaming links using Consumet API
+async function getStreamingLinks(episodeId: string): Promise<ConsumetStreamingData | null> {
+  try {
+    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/watch/${episodeId}`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting streaming links:', error);
+    return null;
+  }
+}
 
 export async function getAnimeSlug(title: string, episode: number) {
   const emptyData = {
@@ -22,53 +98,53 @@ export async function getAnimeSlug(title: string, episode: number) {
 
   if (!title || title === '') return emptyData;
 
-  const slug = title.replace(/[^0-9a-zA-Z]+/g, ' ');
+  // Search for anime using Consumet API
+  const searchResults = await searchAnime(title);
+  if (searchResults.length === 0) return emptyData;
 
-  const findAnime = (await scrapeSearch({ keyw: slug })) as AnimeList[];
+  // Get anime info for the first result
+  const animeInfo = await getAnimeInfo(searchResults[0].id);
+  if (!animeInfo) return emptyData;
 
-  if (findAnime.length === 0) return emptyData;
+  // Find the specific episode
+  const targetEpisode = animeInfo.episodes.find(ep => ep.number === episode);
+  if (!targetEpisode) return emptyData;
 
-  const gogoEpisodes = (await scrapeAnimeDetails({ id: findAnime[0].animeId }))
-    .episodesList as GogoEpisode[];
-
-  const episodeSlug = gogoEpisodes[0]?.episodeId.split('-episode')[0];
-
-  // fetch animes dub and sub
-  const subAnime = scrapeMP4({ id: `${episodeSlug}-episode-${episode}` });
-  const dubAnime = scrapeMP4({
-    id: `${episodeSlug.replace(/-movie$/, '')}-dub-episode-${episode}`,
-  });
-
-  const [sub, dub] = await Promise.all([subAnime, dubAnime]);
-
-  sub.sources = sub.sources || [];
-  sub.sources_bk = sub.sources_bk || [];
-  dub.sources = dub.sources || [];
-  dub.sources_bk = dub.sources_bk || [];
+  // Get streaming links for both sub and dub versions
+  const subLinks = await getStreamingLinks(targetEpisode.id);
+  
+  // Try to find dub version by modifying the episode ID
+  const dubEpisodeId = targetEpisode.id.includes('-dub-') 
+    ? targetEpisode.id 
+    : targetEpisode.id.replace('-episode-', '-dub-episode-');
+  const dubLinks = await getStreamingLinks(dubEpisodeId);
 
   return {
     sub: {
-      Referer: sub.Referer,
-      sources: [...sub.sources, ...sub.sources_bk],
+      Referer: subLinks?.headers?.Referer || '',
+      sources: subLinks?.sources || [],
     },
     dub: {
-      Referer: dub.Referer,
-      sources: [...dub.sources, ...dub.sources_bk],
+      Referer: dubLinks?.headers?.Referer || '',
+      sources: dubLinks?.sources || [],
     },
-    episodes: gogoEpisodes.length || null,
+    episodes: animeInfo.totalEpisodes || animeInfo.episodes.length,
   };
 }
 
 export async function getAnime(id: number, episode: number) {
-  let { english, romaji } = (await getAnimeTitle({ id })).Media.title;
+  const animeData = await getAnimeTitle({ id });
+  const titleData = animeData?.Media?.title;
+  let english = titleData?.english || '';
+  let romaji = titleData?.romaji || '';
 
   // ensure both of them don't have null value
   english = english || romaji;
   romaji = romaji || english;
 
   // lower case both the titles
-  english = english.toLocaleLowerCase();
-  romaji = romaji.toLocaleLowerCase();
+  english = english.toLowerCase();
+  romaji = romaji.toLowerCase();
 
   // if the titles are same run this function once
   if (english === romaji) {
