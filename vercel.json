@@ -1,17 +1,5 @@
 {
-  "builds": [
-    {
-      "src": "build.js",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/.next"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
-    }
-  ]
+  "buildCommand": "turbo run build --filter=@animeflix/frontend",
+  "outputDirectory": "frontend/.next",
+  "installCommand": "yarn install"
 }
