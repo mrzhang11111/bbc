@@ -1,11 +1,12 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 
-import { animePage, getKitsuEpisodes } from '@animeflix/api';
 import {
+  animePage,
+  getKitsuEpisodes,
   AnimeBannerFragment,
   AnimeInfoFragment,
   MediaStatus,
-} from '@animeflix/api/aniList';
+} from '@animeflix/api';
 import { EpisodesListFragment } from '@animeflix/api/kitsu';
 import { EmojiSadIcon } from '@heroicons/react/solid';
 import { NextSeo } from 'next-seo';

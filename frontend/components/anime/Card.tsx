@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { AnimeInfoFragment } from '@animeflix/api/aniList';
+import { AnimeInfoFragment } from '@animeflix/api';
 import { ClockIcon, ThumbUpIcon } from '@heroicons/react/outline';
 import { PlayIcon } from '@heroicons/react/solid';
 

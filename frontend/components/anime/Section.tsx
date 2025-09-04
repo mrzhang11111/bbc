@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 
-import { AnimeInfoFragment } from '@animeflix/api/aniList';
+import { AnimeInfoFragment } from '@animeflix/api';
 
 import AnimeCard from '@components/anime/Card';
 

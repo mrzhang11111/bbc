@@ -3,7 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { AnimeBannerFragment, AnimeInfoFragment } from '@animeflix/api/aniList';
+import { AnimeBannerFragment, AnimeInfoFragment } from '@animeflix/api';
 import { ClockIcon, ThumbUpIcon } from '@heroicons/react/outline';
 import { PlayIcon } from '@heroicons/react/solid';
 

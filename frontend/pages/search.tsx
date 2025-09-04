@@ -1,8 +1,7 @@
 import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import { useRouter } from 'next/router';
 
-import { searchAnime } from '@animeflix/api';
-import { SearchAnimeQuery } from '@animeflix/api/aniList';
+import { searchAnime, SearchAnimeQuery } from '@animeflix/api';
 import { NextSeo } from 'next-seo';
 
 import Card from '@components/anime/Card';

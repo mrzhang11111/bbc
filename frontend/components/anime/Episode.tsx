@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { AnimeBannerFragment, AnimeInfoFragment } from '@animeflix/api/aniList';
+import { AnimeBannerFragment, AnimeInfoFragment } from '@animeflix/api';
 import { EpisodeInfoFragment } from '@animeflix/api/kitsu';
 
 export interface CardProps {

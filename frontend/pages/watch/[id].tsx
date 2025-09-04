@@ -4,8 +4,11 @@ import { GetServerSideProps, InferGetServerSidePropsType } from 'next';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 
-import { watchPage } from '@animeflix/api';
-import { AnimeBannerFragment, AnimeInfoFragment } from '@animeflix/api/aniList';
+import {
+  watchPage,
+  AnimeBannerFragment,
+  AnimeInfoFragment,
+} from '@animeflix/api';
 import { NextSeo } from 'next-seo';
 
 import Genre from '@components/Genre';

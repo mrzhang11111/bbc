@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
-import { AnimeBannerFragment } from '@animeflix/api/aniList';
+import { AnimeBannerFragment } from '@animeflix/api';
 import { ClockIcon, ThumbUpIcon } from '@heroicons/react/outline';
 import { PlayIcon } from '@heroicons/react/solid';
 

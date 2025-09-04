@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { InferGetServerSidePropsType } from 'next';
 
-import { getAnimeByIds, indexPage } from '@animeflix/api';
-import { AnimeInfoFragment } from '@animeflix/api/aniList';
+import { getAnimeByIds, indexPage, AnimeInfoFragment } from '@animeflix/api';
 
 import Banner from '@components/anime/Banner';
 import Section from '@components/anime/Section';
