@@ -1,5 +1,5 @@
 {
-  "buildCommand": "turbo run build --filter=@animeflix/frontend",
+  "buildCommand": "yarn build:api && cd frontend && yarn build",
   "outputDirectory": "frontend/.next",
   "installCommand": "yarn install"
 }
