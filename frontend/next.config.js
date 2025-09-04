@@ -16,6 +16,7 @@ const nextConfig = {
     outputStandalone: true,
     outputFileTracingRoot: path.join(__dirname, '../'),
   },
+  transpilePackages: ['@animeflix/api'],
 };
 
 module.exports = withPwa({
