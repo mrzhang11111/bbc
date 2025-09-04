@@ -2,11 +2,5 @@
   "version": 2,
   "buildCommand": "yarn build",
   "outputDirectory": "frontend/.next",
-  "installCommand": "yarn install",
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/next"
-    }
-  ]
+  "installCommand": "yarn install"
 }

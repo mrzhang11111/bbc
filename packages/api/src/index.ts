@@ -8,8 +8,10 @@ export type {
   Media,
   MediaConnection,
   MediaEdge,
+  MediaStatus,
   PageInfo,
   Query,
+  SearchAnimeQuery,
 } from './generated/aniList';
 
 // Re-export specific types from kitsu
