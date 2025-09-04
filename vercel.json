@@ -5,8 +5,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "buildCommand": "yarn workspace @animeflix/api build && yarn workspace @animeflix/frontend build",
-        "outputDirectory": "frontend/.next"
+        "distDir": "frontend/.next"
       }
     }
   ],
