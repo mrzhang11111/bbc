@@ -6,7 +6,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "yarn workspace @animeflix/api build && yarn workspace @animeflix/frontend build",
+    "build:turbo": "turbo run build",
+    "build:api": "turbo run build --filter=@animeflix/api",
     "dev": "turbo run dev --parallel",
     "lint": "turbo run lint",
     "start": "turbo run start",

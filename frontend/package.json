@@ -12,6 +12,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "build": "next build",
+    "build:original": "next build",
     "start": "next start"
   },
   "dependencies": {
