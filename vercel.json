@@ -1,5 +1,5 @@
 {
-  "buildCommand": "yarn workspace @animeflix/api build && cd frontend && yarn build",
+  "buildCommand": "if [ -f frontend/package.json ]; then yarn --cwd frontend build; else yarn build; fi",
   "outputDirectory": "frontend/.next",
   "installCommand": "yarn install"
 }
