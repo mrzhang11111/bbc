@@ -8,11 +8,13 @@ export type {
   Media,
   MediaConnection,
   MediaEdge,
-  MediaStatus,
   PageInfo,
   Query,
   SearchAnimeQuery,
 } from './generated/aniList';
+
+// Export enum/value used at runtime
+export { MediaStatus } from './generated/aniList';
 
 // Re-export specific types from kitsu
 export type { EpisodesListFragment } from './generated/kitsu';
