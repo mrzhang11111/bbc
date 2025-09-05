@@ -1,7 +1,13 @@
+/* eslint-disable @next/next/no-html-link-for-pages */
 import { getAnimeTitle } from './api';
 
-// Consumet API base URL
-const CONSUMET_API_BASE = 'https://api-consumet-org-psi-nine.vercel.app';
+// Consumet API base URLs (fallbacks). We'll try each until one succeeds.
+const CONSUMET_API_BASES = [
+  'https://api.consumet.org',
+  'https://api-consumet-org-psi-nine.vercel.app',
+  // community mirrors (may be unstable; keep after the primary domain)
+  'https://consumet-api-ten.vercel.app',
+];
 
 // Types for Consumet API responses
 interface ConsumetSearchResult {
@@ -47,40 +53,57 @@ interface ConsumetStreamingData {
   }[];
 }
 
+// Generic JSON fetcher with base URL fallbacks
+async function fetchJsonWithFallback<T>(path: string): Promise<T | null> {
+  // Try all bases in parallel and return the first successful JSON
+  const attempts = CONSUMET_API_BASES.map((base) => {
+    const url = `${base}${path}`;
+    return fetch(url, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
+      },
+    }).then((resp) => {
+      if (!resp.ok) {
+        throw new Error(`HTTP ${resp.status} @ ${url}`);
+      }
+      return resp.json();
+    });
+  });
+  const results = await Promise.allSettled(attempts);
+  for (let i = 0; i < results.length; i += 1) {
+    const r = results[i];
+    if (r.status === 'fulfilled') {
+      return r.value as T;
+    }
+  }
+  return null;
+}
+
 // Helper function to search anime using Consumet API
 async function searchAnime(query: string): Promise<ConsumetSearchResult[]> {
-  try {
-    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/${encodeURIComponent(query)}`);
-    const data = await response.json();
-    return data.results || [];
-  } catch (error) {
-    console.error('Error searching anime:', error);
-    return [];
-  }
+  const data = await fetchJsonWithFallback<any>(
+    `/anime/gogoanime/${encodeURIComponent(query)}`
+  );
+  return data?.results || [];
 }
 
 // Helper function to get anime info using Consumet API
 async function getAnimeInfo(id: string): Promise<ConsumetAnimeInfo | null> {
-  try {
-    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/info/${id}`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting anime info:', error);
-    return null;
-  }
+  const data = await fetchJsonWithFallback<ConsumetAnimeInfo>(
+    `/anime/gogoanime/info/${id}`
+  );
+  return data ?? null;
 }
 
 // Helper function to get streaming links using Consumet API
-async function getStreamingLinks(episodeId: string): Promise<ConsumetStreamingData | null> {
-  try {
-    const response = await fetch(`${CONSUMET_API_BASE}/anime/gogoanime/watch/${episodeId}`);
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting streaming links:', error);
-    return null;
-  }
+async function getStreamingLinks(
+  episodeId: string
+): Promise<ConsumetStreamingData | null> {
+  const data = await fetchJsonWithFallback<ConsumetStreamingData>(
+    `/anime/gogoanime/watch/${episodeId}`
+  );
+  return data ?? null;
 }
 
 export async function getAnimeSlug(title: string, episode: number) {
@@ -98,24 +121,49 @@ export async function getAnimeSlug(title: string, episode: number) {
 
   if (!title || title === '') return emptyData;
 
-  // Search for anime using Consumet API
-  const searchResults = await searchAnime(title);
+  // Search for anime using Consumet API (try both title and a simplified variant)
+  const normalized = title.replace(/\s+/g, ' ').trim();
+  const simplified = normalized.replace(/[^a-zA-Z0-9\s:-]/g, '');
+  let searchResults = await searchAnime(normalized);
+  if (!searchResults.length) {
+    searchResults = await searchAnime(simplified);
+  }
   if (searchResults.length === 0) return emptyData;
 
-  // Get anime info for the first result
-  const animeInfo = await getAnimeInfo(searchResults[0].id);
-  if (!animeInfo) return emptyData;
-
-  // Find the specific episode
-  const targetEpisode = animeInfo.episodes.find(ep => ep.number === episode);
-  if (!targetEpisode) return emptyData;
+  // Fetch top candidates in parallel, then choose the first containing the requested episode
+  const candidates = searchResults.slice(0, 5);
+  const infoResults = await Promise.allSettled(
+    candidates.map((c) => getAnimeInfo(c.id))
+  );
+  let animeInfo: ConsumetAnimeInfo | null = null;
+  let targetEpisode: ConsumetEpisode | undefined;
+  for (let i = 0; i < infoResults.length; i += 1) {
+    const r = infoResults[i];
+    if (r.status !== 'fulfilled' || !r.value) {
+      // skip failures
+    } else {
+      const info = r.value;
+      const exact = info.episodes.find((ep) => ep.number === episode);
+      const loose =
+        exact ||
+        info.episodes.find((ep) => Number(ep.number) === Number(episode));
+      if (loose) {
+        animeInfo = info;
+        targetEpisode = loose;
+        break;
+      }
+      // keep the first valid info as fallback for totalEpisodes
+      if (!animeInfo) animeInfo = info;
+    }
+  }
+  if (!animeInfo || !targetEpisode) return emptyData;
 
   // Get streaming links for both sub and dub versions
   const subLinks = await getStreamingLinks(targetEpisode.id);
-  
+
   // Try to find dub version by modifying the episode ID
-  const dubEpisodeId = targetEpisode.id.includes('-dub-') 
-    ? targetEpisode.id 
+  const dubEpisodeId = targetEpisode.id.includes('-dub-')
+    ? targetEpisode.id
     : targetEpisode.id.replace('-episode-', '-dub-episode-');
   const dubLinks = await getStreamingLinks(dubEpisodeId);
 

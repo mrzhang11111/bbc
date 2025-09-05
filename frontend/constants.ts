@@ -1,1 +1,1 @@
-export const proxyFreeUrls = /(gogocdn\.stream)|(manifest\.prod\.boltdns\.net)/;
+export const proxyFreeUrls = /(manifest\.prod\.boltdns\.net)/;
