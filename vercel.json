@@ -1,5 +1,5 @@
 {
-  "buildCommand": "if [ -f frontend/package.json ]; then yarn --cwd frontend build; else yarn build; fi",
-  "outputDirectory": ".next",
+  "buildCommand": "yarn build:api && cd frontend && yarn build",
+  "outputDirectory": "frontend/.next",
   "installCommand": "yarn install"
 }

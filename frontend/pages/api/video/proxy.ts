@@ -25,7 +25,18 @@ export default async function handler(
       return;
     }
 
-    const srcUrl = typeof src === 'string' ? src : src.join('');
+    let srcUrl = typeof src === 'string' ? src : src.join('');
+    // If src is percent-encoded, decode it once to get a valid URL
+    try {
+      // Only decode if it looks encoded (has % and no protocol after decode)
+      if (/%[0-9A-Fa-f]{2}/.test(srcUrl)) {
+        const decoded = decodeURIComponent(srcUrl);
+        // basic heuristic: decoded should start with http(s) to accept
+        if (/^https?:\/\//.test(decoded)) srcUrl = decoded;
+      }
+    } catch {
+      // ignore decode errors, use as-is
+    }
     const refererHeader =
       typeof referer === 'string' ? referer : referer?.join(' ') ?? '';
 

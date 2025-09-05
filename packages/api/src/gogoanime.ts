@@ -53,6 +53,22 @@ interface ConsumetStreamingData {
   }[];
 }
 
+// Types for meta/anilist endpoints
+interface MetaEpisode {
+  id: string; // provider episode id (e.g., gogoanime)
+  number: number;
+  isFiller?: boolean;
+}
+
+interface MetaEpisodesResponse {
+  episodes: MetaEpisode[];
+}
+
+interface MetaWatchResponse {
+  headers?: { Referer?: string };
+  sources?: { url: string; quality?: string; isM3U8?: boolean }[];
+}
+
 // Generic JSON fetcher with base URL fallbacks
 async function fetchJsonWithFallback<T>(path: string): Promise<T | null> {
   // Try all bases in parallel and return the first successful JSON
@@ -106,6 +122,25 @@ async function getStreamingLinks(
   return data ?? null;
 }
 
+// Meta/anilist helpers (more reliable mapping by AniList ID)
+async function getMetaEpisodesByAniListId(
+  aniListId: number
+): Promise<MetaEpisode[] | null> {
+  const data = await fetchJsonWithFallback<MetaEpisodesResponse>(
+    `/meta/anilist/episodes/${aniListId}?provider=gogoanime`
+  );
+  return data?.episodes ?? null;
+}
+
+async function getMetaWatchByEpisodeId(
+  episodeId: string
+): Promise<MetaWatchResponse | null> {
+  const data = await fetchJsonWithFallback<MetaWatchResponse>(
+    `/meta/anilist/watch/${encodeURIComponent(episodeId)}?provider=gogoanime`
+  );
+  return data ?? null;
+}
+
 export async function getAnimeSlug(title: string, episode: number) {
   const emptyData = {
     sub: {
@@ -121,6 +156,13 @@ export async function getAnimeSlug(title: string, episode: number) {
 
   if (!title || title === '') return emptyData;
 
+  // Primary path: use meta/anilist (more robust for长番/季分档)
+  // We need AniList id here; since this function is title-based, we'll only
+  // use meta path when getAnime() calls us with both romaji/english and later
+  // we can pass AniList id at a higher level. As a workaround here, keep the
+  // legacy search method, and meta path will be used in getAnime() directly.
+
+  // Legacy search-based path (fallback)
   // Search for anime using Consumet API (try both title and a simplified variant)
   const normalized = title.replace(/\s+/g, ' ').trim();
   const simplified = normalized.replace(/[^a-zA-Z0-9\s:-]/g, '');
@@ -170,11 +212,11 @@ export async function getAnimeSlug(title: string, episode: number) {
   return {
     sub: {
       Referer: subLinks?.headers?.Referer || '',
-      sources: subLinks?.sources || [],
+      sources: (subLinks?.sources || []).map((s) => ({ file: s.url })) as any,
     },
     dub: {
       Referer: dubLinks?.headers?.Referer || '',
-      sources: dubLinks?.sources || [],
+      sources: (dubLinks?.sources || []).map((s) => ({ file: s.url })) as any,
     },
     episodes: animeInfo.totalEpisodes || animeInfo.episodes.length,
   };
@@ -194,7 +236,43 @@ export async function getAnime(id: number, episode: number) {
   english = english.toLowerCase();
   romaji = romaji.toLowerCase();
 
-  // if the titles are same run this function once
+  // First try meta/anilist by AniList ID for robust episode mapping
+  try {
+    const metaEpisodes = await getMetaEpisodesByAniListId(id);
+    if (metaEpisodes && metaEpisodes.length) {
+      const target = metaEpisodes.find(
+        (e) => Number(e.number) === Number(episode)
+      );
+      if (target) {
+        const subLinks = await getMetaWatchByEpisodeId(target.id);
+        // Try to derive a dub id variant for meta as well (provider-dependent)
+        const dubId = target.id.includes('-dub-')
+          ? target.id
+          : target.id.replace('-episode-', '-dub-episode-');
+        const dubLinks = await getMetaWatchByEpisodeId(dubId);
+
+        return {
+          sub: {
+            Referer: subLinks?.headers?.Referer || '',
+            sources: (subLinks?.sources || []).map((s) => ({
+              file: s.url,
+            })) as any,
+          },
+          dub: {
+            Referer: dubLinks?.headers?.Referer || '',
+            sources: (dubLinks?.sources || []).map((s) => ({
+              file: s.url,
+            })) as any,
+          },
+          episodes: metaEpisodes.length,
+        };
+      }
+    }
+  } catch {
+    // ignore and fallback to title search
+  }
+
+  // if the titles are same run this function once (legacy)
   if (english === romaji) {
     return getAnimeSlug(english, episode);
   }
