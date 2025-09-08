@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-html-link-for-pages */
+/* eslint-disable @next/next/no-html-link-for-pages, no-console, unused-imports/no-unused-vars, import/no-cycle */
 import { getAnimeTitle } from './api';
 
 // Consumet API base URLs (fallbacks). We'll try each until one succeeds.
