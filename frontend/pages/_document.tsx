@@ -3,6 +3,8 @@ import { Html, Head, Main, NextScript } from 'next/document';
 const Document = () => (
   <Html>
     <Head>
+      {/* Monetag verification - replace with actual verification code from Monetag dashboard */}
+      {/* <meta name="monetag-site-verification" content="YOUR_VERIFICATION_CODE_HERE" /> */}
       <link rel="manifest" href="/site.webmanifest" />
       <link rel="icon" type="image/x-icon" href="/favicon.ico" />
       <link

@@ -23,7 +23,10 @@ module.exports = withPwa({
   ...nextConfig,
   pwa: {
     dest: 'public',
-    // disable pwa when not in production
-    disable: process.env.NODE_ENV !== 'production',
+    // Temporarily disable PWA to allow Monetag verification
+    disable: true,
+    // Use different SW filename to avoid conflict with Monetag verification
+    swSrc: 'service-worker.js',
+    swDest: 'service-worker.js',
   },
 });
